@@ -1,4 +1,4 @@
-import { text } from '@kit.ArkGraphics2D'
+import text from '@ohos.graphics.text'
 import { LrcLine } from '../bean/LrcLine'
 import { LrcWord } from '../bean/LrcWord'
 import { LyricDisplayLine } from '../bean/LyricDisplayLine'

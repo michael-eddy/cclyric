@@ -1,9 +1,10 @@
-import { FrameNode, NodeController, RenderNode } from '@kit.ArkUI'
 import { LrcLine } from '../bean/LrcLine'
-import { common2D, drawing } from '@kit.ArkGraphics2D'
+import drawing from '@ohos.graphics.drawing'
+import { AlignMode } from '../bean/AlignMode'
+import common2D from '@ohos.graphics.common2D'
 import { ColorHelper } from '../extensions/ColorHelper'
 import { MediaLogger } from '../extensions/MediaLogger'
-import { AlignMode } from '../bean/AlignMode'
+import { FrameNode, NodeController, RenderNode } from '@ohos.arkui.node'
 
 const TAG = "[LrcLineView]"
 
