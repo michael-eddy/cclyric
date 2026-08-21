@@ -104,6 +104,7 @@ export struct CcLyricView {
                     itemView.setTextColor(this.controller.getTextColor())
                     itemView.setKrcTextBgColor(this.controller.getKrcTextBgColor())
                     itemView.setTextHighlightColor(this.controller.getTextHighlightColor())
+                    itemView.setTypeface(this.controller.getTypeface())
                     itemView.setAlignMode(this.alignMode)
                 }
             }
@@ -417,6 +418,7 @@ export struct CcLyricView {
         view.setTextColor(this.controller.getTextColor())
         view.setKrcTextBgColor(this.controller.getKrcTextBgColor())
         view.setTextHighlightColor(this.controller.getTextHighlightColor())
+        view.setTypeface(this.controller.getTypeface())
         view.setAlignMode(this.alignMode)
         return view
     }

@@ -22,6 +22,7 @@ export class LrcLineView extends NodeController {
     private textColor: number = -1
     private krcTextBgColor: number = -1
     private textHighlightColor: number = -1
+    private typeface: drawing.Typeface | null = null
     private mode: AlignMode = AlignMode.CENTER
 
     markHighlight() {
@@ -51,6 +52,11 @@ export class LrcLineView extends NodeController {
     public setTextHighlightColor(color: number) {
         this.textHighlightColor = color
         this.lyricTextView?.setTextHighlightColor(color)
+    }
+
+    public setTypeface(typeface: drawing.Typeface | null) {
+        this.typeface = typeface
+        this.lyricTextView?.setTypeface(typeface)
     }
 
     constructor(lyricLine: LrcLine) {
@@ -110,6 +116,9 @@ export class LrcLineView extends NodeController {
             if (this.textHighlightColor !== -1) {
                 this.setTextHighlightColor(this.textHighlightColor)
             }
+            if (this.typeface !== null) {
+                this.lyricTextView.setTypeface(this.typeface)
+            }
             this.setAlignMode(this.mode)
             const renderNode = this.rootView?.getRenderNode()
             if (renderNode) {
@@ -151,10 +160,12 @@ class LrcTextView extends RenderNode {
         alpha: 255
     }
     private textHighlightColor: number = 0xFFFF0000
-    private lyricTextBlob?: drawing.TextBlob = undefined
+    private lyricTextBlobs: drawing.TextBlob[] = []
+    private lineWidths: number[] = []
+    private lineHeights: number[] = []
     private textWidth: number = 0
     private textHeight: number = 0
-    private beginX = -1
+    private lineHeight: number = 0
     private beginY = -1
     private playPosition = -1
     private drawingWidth = 0
@@ -214,16 +225,36 @@ class LrcTextView extends RenderNode {
         this.updateConfig()
     }
 
+    setTypeface(typeface: drawing.Typeface | null) {
+        if (typeface !== null) {
+            this.font.setTypeface(typeface)
+            this.updateConfig()
+        }
+    }
+
     private updateConfig() {
         this.normalPen.setColor(this.textColor)
         this.krcNormalPen.setColor(this.textKrcBgColor)
         this.font.setSize(this.textSize)
-        this.lyricTextBlob = drawing.TextBlob.makeFromString(this.lyricLine.text, this.font, drawing.TextEncoding.TEXT_ENCODING_UTF8)
-        const bound = this.lyricTextBlob.bounds()
-        this.textWidth = Math.max(0, bound.right - bound.left)
-        this.textHeight = Math.max(0, bound.bottom - bound.top)
-        this.beginX = this.mode === AlignMode.CENTER ? (this.context.vp2px(this.frame.width) - this.textWidth) / 2 : 0
-        this.beginY = this.context.vp2px(this.frame.height / 2) + this.textHeight / 2
+        const lines = this.lyricLine.text.split('\n')
+        this.lyricTextBlobs = []
+        this.lineWidths = []
+        this.lineHeights = []
+        this.textWidth = 0
+        this.textHeight = 0
+        for (let i = 0; i < lines.length; i++) {
+            const blob = drawing.TextBlob.makeFromString(lines[i], this.font, drawing.TextEncoding.TEXT_ENCODING_UTF8)
+            const bound = blob.bounds()
+            const width = Math.max(0, bound.right - bound.left)
+            const height = Math.max(0, bound.bottom - bound.top)
+            this.lyricTextBlobs.push(blob)
+            this.lineWidths.push(width)
+            this.lineHeights.push(height)
+            this.textWidth = Math.max(this.textWidth, width)
+            this.textHeight += height
+        }
+        this.lineHeight = lines.length > 0 ? this.lineHeights[0] : 0
+        this.updateLayout()
         if (!this.isKrc) {
             const argb = ColorHelper.hex2Argb(this.textHighlightColor)
             this.highlightPen.setColor({
@@ -233,6 +264,15 @@ class LrcTextView extends RenderNode {
                 blue: argb[3]
             })
         }
+        this.invalidate()
+    }
+
+    private updateLayout() {
+        const frameWidth = this.context.vp2px(this.frame.width)
+        const frameHeight = this.context.vp2px(this.frame.height)
+        const totalHeight = this.textHeight
+        const startY = frameHeight / 2 - totalHeight / 2 + this.lineHeight / 2
+        this.beginY = Math.max(this.lineHeight / 2, startY)
         this.invalidate()
     }
 
@@ -252,9 +292,7 @@ class LrcTextView extends RenderNode {
             width: width,
             height: height
         }
-        this.beginX = this.mode === AlignMode.CENTER ? (this.context.vp2px(this.frame.width) - this.textWidth) / 2 : 0
-        this.beginY = this.context.vp2px(height) / 2 + this.textHeight / 2
-        this.invalidate()
+        this.updateLayout()
     }
 
     update(position: number) {
@@ -312,6 +350,10 @@ class LrcTextView extends RenderNode {
         this.drawingWidth = this.textWidth
     }
 
+    private getLineBeginX(lineWidth: number): number {
+        return this.mode === AlignMode.CENTER ? (this.context.vp2px(this.frame.width) - lineWidth) / 2 : 0
+    }
+
     draw(context: DrawContext): void {
         const canvas = context.canvas
         if (this.isKrc) {
@@ -324,7 +366,14 @@ class LrcTextView extends RenderNode {
     private drawLrc(canvas: drawing.Canvas) {
         const paint = this.isHighlight ? this.highlightPen : this.normalPen
         canvas.attachBrush(paint)
-        canvas.drawTextBlob(this.lyricTextBlob, this.beginX, this.beginY)
+        let y = this.beginY
+        for (let i = 0; i < this.lyricTextBlobs.length; i++) {
+            const blob = this.lyricTextBlobs[i]
+            if (blob !== undefined && this.lineHeights[i] > 0) {
+                canvas.drawTextBlob(blob, this.getLineBeginX(this.lineWidths[i]), y)
+            }
+            y += this.lineHeights[i]
+        }
         canvas.detachBrush()
     }
 
@@ -338,18 +387,32 @@ class LrcTextView extends RenderNode {
     private drawKrcBackground(canvas: drawing.Canvas) {
         const pen = this.isHighlight ? this.krcNormalPen : this.normalPen
         canvas.attachBrush(pen)
-        canvas.drawTextBlob(this.lyricTextBlob, this.beginX, this.beginY)
+        let y = this.beginY
+        for (let i = 0; i < this.lyricTextBlobs.length; i++) {
+            const blob = this.lyricTextBlobs[i]
+            if (blob !== undefined && this.lineHeights[i] > 0) {
+                canvas.drawTextBlob(blob, this.getLineBeginX(this.lineWidths[i]), y)
+            }
+            y += this.lineHeights[i]
+        }
         canvas.detachBrush()
     }
 
     private drawKrcForeground(canvas: drawing.Canvas) {
         if (this.playPosition > 0) {
-            this.endPoint.x = this.drawingWidth + this.beginX
+            this.endPoint.x = this.drawingWidth + this.getLineBeginX(this.textWidth)
             const shaderEffect = drawing.ShaderEffect.createLinearGradient({ x: 0, y: 0 }, this.endPoint,
                 [this.textHighlightColor, this.textHighlightColor], drawing.TileMode.DECAL)
             this.highlightPen.setShaderEffect(shaderEffect)
             canvas.attachBrush(this.highlightPen)
-            canvas.drawTextBlob(this.lyricTextBlob, this.beginX, this.beginY)
+            let y = this.beginY
+            for (let i = 0; i < this.lyricTextBlobs.length; i++) {
+                const blob = this.lyricTextBlobs[i]
+                if (blob !== undefined && this.lineHeights[i] > 0) {
+                    canvas.drawTextBlob(blob, this.getLineBeginX(this.lineWidths[i]), y)
+                }
+                y += this.lineHeights[i]
+            }
             canvas.detachBrush()
         }
     }

@@ -1,6 +1,7 @@
 import { AlignMode } from './bean/AlignMode'
 import { Lrc } from './bean/Lrc'
 import { MediaLogger } from './extensions/MediaLogger'
+import { drawing } from '@kit.ArkGraphics2D'
 
 /**
  * The controller of CcLyricView to control the view.
@@ -15,6 +16,7 @@ export class CcLyricController {
     private _textColor: number = 0xff000000
     private _krcTextBgColor: number = 0xff000000
     private _textHighlightColor: number = 0xffff0000
+    private _typeface: drawing.Typeface | null = null
     private _highlightScale: number = 1.1
     private _emptyHint: ResourceStr = "--"
     private _fadeEnable: boolean = true
@@ -186,6 +188,20 @@ export class CcLyricController {
 
     public getTextHighlightColor(): number {
         return this._textHighlightColor
+    }
+
+    /**
+     * Set the custom typeface of lyric text.
+     * @param typeface The typeface, null to restore the default font.
+     */
+    public setTypeface(typeface: drawing.Typeface | null): CcLyricController {
+        this._typeface = typeface
+        this.invalidate()
+        return this
+    }
+
+    public getTypeface(): drawing.Typeface | null {
+        return this._typeface
     }
 
     /**
