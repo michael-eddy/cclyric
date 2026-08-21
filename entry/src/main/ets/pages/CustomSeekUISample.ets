@@ -1,6 +1,7 @@
 import { AlignMode, CcLyricController, CcLyricView, Lrc } from '@seagazer/cclyric';
 import { MockData, StringParser } from './MockData';
-
+import drawing from '@ohos.graphics.drawing';
+import deviceInfo from '@ohos.deviceInfo';
 
 @Entry
 @ComponentV2
@@ -38,6 +39,9 @@ struct CustomSeekUISample {
             .setTextHighlightColor(0xffe7107f)
             .setAlignMode(AlignMode.START)
             .setEmptyHint("未找到歌词")
+            .setSeekIconColor(0xffe7107f)
+        if (deviceInfo.sdkApiVersion >= 18)
+            this.controller.setTypeface(drawing.Typeface.makeFromRawFile($rawfile('NotoSerifCJK.ttc')))
         this.lyric = this.parser.parse(MockData.krc1)
         this.controller.setLyric(this.lyric)
     }
