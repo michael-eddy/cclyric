@@ -54,6 +54,7 @@ struct CcLyricViewSample {
             .setFadeEnable(true)
             .setFadePercent(0.15)
             .setTopOffset(300)
+            .setSeekIconColor(0xffe7107f)
         this.player.addOnProgressChangedListener(this.progressChangedListener)
             .addOnPreparedListener(this.prepareListener)
             .addOnSeekChangedListener(this.seekChangedListener)

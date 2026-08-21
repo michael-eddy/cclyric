@@ -42,6 +42,7 @@ export struct CcLyricView {
     @Local centerLrcLine?: LrcLine = undefined
     @Local topOffset: number = 100
     @Local alignMode: AlignMode = AlignMode.CENTER
+    @Local seekIconColor: ResourceColor = "#80717171"
     @Event onDataSourceReady: () => void
     private isDataSourceReady = false
     private viewWidth = 0 // px
@@ -70,6 +71,7 @@ export struct CcLyricView {
         this.alignMode = this.controller.getAlignMode()
         this.fadeEnable = this.controller.getFadeEnable()
         this.fadePercent = this.controller.getFadePercent()
+        this.seekIconColor = this.controller.getSeekIconColor()
         this.controller.onProgressChanged = (position) => {
             this.syncPlaybackClock(position)
             this.updatePosition(position)
@@ -98,6 +100,7 @@ export struct CcLyricView {
             this.fadePercent = this.controller.getFadePercent()
             this.topOffset = this.controller.getTopOffset()
             this.alignMode = this.controller.getAlignMode()
+            this.seekIconColor = this.controller.getSeekIconColor()
             for (let i = 0; i < this.lrcDataSource.totalCount(); i++) {
                 const itemView = this.lrcDataSource.getData(i)
                 if (itemView !== undefined) {
@@ -148,10 +151,11 @@ export struct CcLyricView {
                         .layoutWeight(1)
                         .height(1)
                         .backgroundColor("#80717171")
-                    Image($r('app.media.cclyric_play'))
-                        .width(56)
+
+                    SymbolGlyph($r('sys.symbol.play_fill'))
+                        .fontSize(36)
+                        .fontColor([this.seekIconColor])
                         .height("100%")
-                        .objectFit(ImageFit.Contain)
                         .onClick(() => {
                             if (this.centerLrcLine) {
                                 this.onSeekAction?.(this.centerLrcLine.beginTime)

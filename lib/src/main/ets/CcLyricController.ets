@@ -22,6 +22,7 @@ export class CcLyricController {
     private _fadeEnable: boolean = true
     private _fadePercent: number = 0.2
     private _topOffset: number = 100 //vp
+    private _seekIconColor: ResourceColor = "#80717171"
     private alignMode = AlignMode.CENTER
 
     /**
@@ -45,6 +46,20 @@ export class CcLyricController {
 
     getTopOffset(): number {
         return this._topOffset
+    }
+
+    /**
+     * Set the color of the seek icon of the custom seek ui, default is 0x80717171.
+     * @param color The seek icon color, support number, string, Color or Resource.
+     */
+    setSeekIconColor(color: ResourceColor): CcLyricController {
+        this._seekIconColor = color
+        this.invalidate()
+        return this
+    }
+
+    getSeekIconColor(): ResourceColor {
+        return this._seekIconColor
     }
 
     /**
