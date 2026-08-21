@@ -8,6 +8,18 @@ struct CustomSeekUISample {
     private timer = -1
     private changeCount = 0
     private parser = new StringParser()
+    private lyricSources: string[][] = [
+        MockData.src1,
+        MockData.src2,
+        MockData.src3,
+        MockData.src4,
+        MockData.krc1,
+        MockData.krc2,
+        MockData.krc3,
+        MockData.krc6,
+        MockData.krc7,
+        MockData.krc8
+    ]
     @Local progress: number = 0
     @Local lyric?: Lrc = undefined
     private controller: CcLyricController = new CcLyricController()
@@ -149,16 +161,9 @@ struct CustomSeekUISample {
 
     // change data source
     private mockChanged() {
-        if (this.changeCount % 3 == 0) {
-            this.lyric = this.parser.parse(MockData.krc3)
-            this.controller.setLyric(this.lyric)
-        } else if (this.changeCount % 2 == 0) {
-            this.lyric = this.parser.parse(MockData.krc2)
-            this.controller.setLyric(this.lyric)
-        } else {
-            this.lyric = this.parser.parse(MockData.krc1)
-            this.controller.setLyric(this.lyric)
-        }
+        const source = this.lyricSources[this.changeCount % this.lyricSources.length]
+        this.lyric = this.parser.parse(source)
+        this.controller.setLyric(this.lyric)
         // replay
         this.mockMediaPlay()
         this.changeCount++
