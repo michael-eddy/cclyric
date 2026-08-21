@@ -82,6 +82,17 @@ export class LrcLineView extends NodeController {
     }
 
     /**
+     * Return the line count of the lyric text (split by newline).
+     * @returns The line count of this lyric.
+     */
+    getLineCount(): number {
+        if (this.isEmptyLine) {
+            return 0
+        }
+        return this.lyricLine.text.split('\n').length
+    }
+
+    /**
      * Play the effect animation.
      * @param position The playing position of media player.
      */

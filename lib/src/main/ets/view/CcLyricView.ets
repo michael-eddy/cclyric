@@ -177,7 +177,9 @@ export struct CcLyricView {
                             }
                         }
                         .width("100%")
-                        .height(this.controller.getTextSize() * 1.5) // todo multiline
+                        .height(itemView && itemView.getLineCount() > 0 ?
+                            this.controller.getTextSize() * 1.5 * itemView.getLineCount() :
+                            this.controller.getTextSize() * 1.5)
                         .scale(this.focusIndex === index ?
                             {
                                 x: this.controller.getHighlightScale(),
